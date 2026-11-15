@@ -252,8 +252,16 @@ export default function App() {
           })),
         }),
       });
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        throw new Error(
+          res.ok
+            ? 'Unexpected response from server.'
+            : `Backend API is unavailable (HTTP ${res.status}). Static hosting like GitHub Pages serves the UI only without the Node.js /api/chat server.`
+        );
+      }
       const data = await res.json();
-      if (data.error) throw new Error(data.error);
+      if (!res.ok || data.error) throw new Error(data.error || `Request failed (${res.status})`);
 
       const modelMsg: ChatMessage = { role: 'model', text: data.text };
       setChats(prev =>
